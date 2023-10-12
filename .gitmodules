@@ -1,0 +1,3 @@
+[submodule "pyzpc/zpc_jit/zpc"]
+	path = pyzpc/zpc_jit/zpc
+	url = https://github.com/zenustech/zpc.git
