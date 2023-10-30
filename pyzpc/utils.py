@@ -2,6 +2,11 @@ import os
 import ctypes
 import hashlib
 
+if os.name == 'nt':
+    os.add_dll_directory('C:\\Windows\\System32\\downlevel')
+    if 'CUDA_PATH' in os.environ:
+        os.add_dll_directory(os.path.join(os.environ['CUDA_PATH'], 'bin'))
+
 
 def check_folder(path):
     folder_path = os.path.dirname(path)
@@ -27,10 +32,10 @@ class CLib:
         if os.path.exists(lib_path):
             self.lib = ctypes.cdll.LoadLibrary(lib_path)
         else:
-            self.lib = None 
+            self.lib = None
 
     def register(self, restype, func_name, *argtypes):
-        if self.lib is None: 
+        if self.lib is None:
             print(f'Library {self.lib_path} is not found, \
                   please check if CUDA and LLVM are installed properly.')
         func = getattr(self.lib, func_name)

@@ -5,6 +5,13 @@ import shutil
 from os.path import dirname, join as pjoin
 from setuptools import setup, find_packages
 
+
+def find_file_dir_recursive(name, path):
+    for root, dirs, files in os.walk(path):
+        if name in files:
+            return root
+
+
 meta = {}
 with open(pjoin('pyzpc', '__version__.py')) as f:
     exec(f.read(), meta)
@@ -19,10 +26,10 @@ out_lib_dir_path = pathlib.Path(out_lib_dir)
 out_lib_dir_path.mkdir(parents=True, exist_ok=True)
 cmake_args = [
     f'-B{build_dir}',
-    # '-DCMAKE_BUILD_TYPE=Release', 
-    '-DZS_ENABLE_VULKAN=OFF', 
-    '-DZS_ENABLE_JIT=ON', 
-    '-DZS_ENABLE_CUDA=ON', 
+    # '-DCMAKE_BUILD_TYPE=Release',
+    '-DZS_ENABLE_VULKAN=OFF',
+    '-DZS_ENABLE_JIT=ON',
+    '-DZS_ENABLE_CUDA=ON',
     '-DWHEREAMI_BUILD_SHARED_LIBS=ON'
 ]
 build_args = [
@@ -35,9 +42,16 @@ subprocess.run(
 subprocess.run(
     ['cmake', '--build', build_dir, *build_args], cwd='.', check=True
 )
-for filename in os.listdir(build_dir):
+
+lib_prefix = '' if os.name == 'nt' else 'lib'
+lib_suffix = 'dll' if os.name == 'nt' else 'so'
+loc_lib_name = f'{lib_prefix}zswhereami.{lib_suffix}'
+build_lib_dir = find_file_dir_recursive(loc_lib_name, os.path.dirname(__file__))
+for filename in os.listdir(build_lib_dir):
     if filename.endswith('.so') or filename.endswith('.dll'):
-        shutil.copy(pjoin(build_dir, filename), pjoin(out_lib_dir, filename))
+        shutil.copy(
+            pjoin(build_lib_dir, filename),
+            pjoin(out_lib_dir, filename))
 # os.removedirs(build_dir)
 os.chdir(str(cwd))
 
@@ -56,14 +70,14 @@ setup(
              'zpc_jit/zpc/**/*.cuh',
              'zpc_jit/zpc/**/*.cpp',
              'zpc_jit/zpc/**/*.cu',
-             'zpc_jit/lib/*.so', 
+             'zpc_jit/lib/*.so',
              'zpc_jit/lib/*.dll']
     },
-    include_package_data=True, 
+    include_package_data=True,
     classifiers=[],
     tests_require=[],
     install_requires=[
-        'numpy', 
+        'numpy',
         'sympy'
     ],
     python_requires='>=3.8'
