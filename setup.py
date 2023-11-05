@@ -27,6 +27,7 @@ out_lib_dir_path.mkdir(parents=True, exist_ok=True)
 cmake_args = [
     f'-B{build_dir}',
     # '-DCMAKE_BUILD_TYPE=Release',
+    '-DZS_ENABLE_ZENO_CU_WRANGLE=OFF',
     '-DZS_ENABLE_VULKAN=OFF',
     '-DZS_ENABLE_JIT=ON',
     '-DZS_ENABLE_CUDA=ON',
