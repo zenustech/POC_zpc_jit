@@ -46,8 +46,10 @@ subprocess.run(
 
 lib_prefix = '' if os.name == 'nt' else 'lib'
 lib_suffix = 'dll' if os.name == 'nt' else 'so'
-loc_lib_name = f'{lib_prefix}zswhereami.{lib_suffix}'
-build_lib_dir = find_file_dir_recursive(loc_lib_name, os.path.dirname(__file__))
+# loc_lib_name = f'{lib_prefix}zswhereami.{lib_suffix}'
+loc_lib_name = f'{lib_prefix}zpc_py_interop.{lib_suffix}'
+build_lib_dir = find_file_dir_recursive(loc_lib_name, build_dir)
+# build_lib_dir = find_file_dir_recursive(loc_lib_name, os.path.dirname(__file__))
 for filename in os.listdir(build_lib_dir):
     if filename.endswith('.so') or filename.endswith('.dll'):
         shutil.copy(
