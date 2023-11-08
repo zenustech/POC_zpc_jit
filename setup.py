@@ -26,12 +26,13 @@ out_lib_dir_path = pathlib.Path(out_lib_dir)
 out_lib_dir_path.mkdir(parents=True, exist_ok=True)
 cmake_args = [
     f'-B{build_dir}',
-    # '-DCMAKE_BUILD_TYPE=Release',
+    '-DCMAKE_BUILD_TYPE=Release',
     '-DZS_ENABLE_ZENO_CU_WRANGLE=OFF',
     '-DZS_ENABLE_VULKAN=OFF',
     '-DZS_ENABLE_JIT=ON',
     '-DZS_ENABLE_CUDA=ON',
-    '-DWHEREAMI_BUILD_SHARED_LIBS=ON'
+    # '-DCMAKE_TOOLCHAIN_FILE=C:/Develop/vcpkg/scripts/buildsystems/vcpkg.cmake',
+    '-DZS_BUILD_SHARED_LIBS=ON'
 ]
 build_args = [
     '--config', 'Release',
