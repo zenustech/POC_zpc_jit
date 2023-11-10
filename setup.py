@@ -1,4 +1,5 @@
 import os
+from glob import glob 
 import pathlib
 import subprocess
 import shutil
@@ -49,11 +50,14 @@ lib_prefix = '' if os.name == 'nt' else 'lib'
 lib_suffix = 'dll' if os.name == 'nt' else 'so'
 loc_lib_name = f'{lib_prefix}zpc_py_interop.{lib_suffix}'
 build_lib_dir = find_file_dir_recursive(loc_lib_name, build_dir)
-for filename in os.listdir(build_lib_dir):
-    if filename.endswith('.so') or filename.endswith('.dll'):
-        shutil.copy(
-            pjoin(build_lib_dir, filename),
-            pjoin(out_lib_dir, filename))
+shared_lib_paths = glob(pjoin(build_dir, '**/*.so'), recursive=True) + \
+    glob(pjoin(build_dir, '**/*.dll'), recursive=True)
+for path in shared_lib_paths:
+    filename = os.path.basename(path)
+    shutil.copy(
+        path, 
+        pjoin(out_lib_dir, filename)
+    )
 # os.removedirs(build_dir)
 os.chdir(str(cwd))
 
