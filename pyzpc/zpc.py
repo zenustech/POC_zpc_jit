@@ -44,3 +44,16 @@ zpc_lib.register(c_size_t, 'property_tags_get_size', c_void_p)
 zpc_lib.register(c_void_p, 'policy__device')
 zpc_lib.register(None, 'del_policy__device', c_void_p)
 zpc_lib.register(None, 'launch__device', c_void_p, c_void_p, c_size_t, POINTER(c_void_p))
+
+def def_small_vec_funcs(api_suffix):
+    zpc_lib.register(c_void_p, f'small_vec__{api_suffix}')
+    zpc_lib.register(None, f'del_small_vec__{api_suffix}', c_void_p)
+    zpc_lib.register(c_void_p, f'small_vec_data_ptr__{api_suffix}', c_void_p)
+
+for elem_type in ('int', 'float', 'double'):
+    def_small_vec_funcs(elem_type)
+    for m in range(1, 5):
+        def_small_vec_funcs(f'{elem_type}_{m}')
+        for n in range(1, 5):
+            def_small_vec_funcs(f'{elem_type}_{m}_{n}')
+    
