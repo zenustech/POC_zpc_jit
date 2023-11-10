@@ -386,12 +386,14 @@ class VectorObject(VectorAPI, ZenoObject):
 
 
 # TODO: indicing, rows, cols, ...
+# TODO: data_ptr for SmallVecObject
 class SmallVecAPI:
-    def __init__(self, ptr, shape=(1,), dtype: DataType = fl) -> None:
+    def __init__(self, ptr, shape=(1,), dtype: DataType = fl, data_ptr=None) -> None:
         shape_suffix = '_' + '_'.join(str(x)
                                       for x in shape) if len(shape) else ''
         self.api_suffix = dtype.name + shape_suffix
         self.ptr = ptr
+        self.data_ptr = data_ptr
         self.shape = shape
         self.dtype = dtype
 
@@ -410,7 +412,7 @@ class SmallVecAPI:
         arr = np.empty(self.shape, np_dtype)
         arr = np.ascontiguousarray(arr)
         assert sizeinbytes == arr.size * arr.dtype.itemsize
-        ctypes.memmove(arr.ctypes.data, self.ptr, sizeinbytes)
+        ctypes.memmove(arr.ctypes.data, self.data_ptr, sizeinbytes)
         return arr.reshape(self.shape)
 
     def call_zpc(self, func_name, *args):
@@ -423,7 +425,8 @@ class SmallVec(SmallVecAPI):
                                       for x in shape) if len(shape) else ''
         api_suffix = dtype.name + shape_suffix
         ptr = zpc_lib.call('small_vec__' + api_suffix)
-        super().__init__(ptr, shape, dtype)
+        data_ptr = zpc_lib.call('small_vec_data_ptr__' + api_suffix, ptr)
+        super().__init__(ptr, shape, dtype, data_ptr)
 
     @staticmethod
     def from_numpy(arr: np.ndarray):
