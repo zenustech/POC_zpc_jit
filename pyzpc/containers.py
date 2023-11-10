@@ -464,6 +464,7 @@ def create_svec_obj(shape, dtype: DataType):
 def svec_info_from_handle(handle):
     _dims = ctypes.c_size_t()
     _ptr = ctypes.c_void_p()
+    _data_ptr = ctypes.c_void_p()
     _dim_x = ctypes.c_size_t()
     _dim_y = ctypes.c_size_t()
     _type_ind = ctypes.c_int()
@@ -473,7 +474,8 @@ def svec_info_from_handle(handle):
         ctypes.byref(_dims),
         ctypes.byref(_dim_x),
         ctypes.byref(_dim_y),
-        ctypes.byref(_type_ind))
+        ctypes.byref(_type_ind), 
+        ctypes.byref(_data_ptr))
     shape = ()
     if _dims.value == 0:
         shape = ()
@@ -483,7 +485,7 @@ def svec_info_from_handle(handle):
         shape = (_dim_x.value, _dim_y.value)
     else:
         raise Exception(f"unsupported dim {_dims.value}")
-    return _ptr.value, shape, ind2zstype[_type_ind.value]
+    return _ptr.value, _data_ptr.value, shape, ind2zstype[_type_ind.value]
 
 
 class SmallVecObject(SmallVecAPI, ZenoObject):
@@ -491,14 +493,14 @@ class SmallVecObject(SmallVecAPI, ZenoObject):
         if handle is None:
             handle = create_svec_obj(shape, dtype)
         if ptr is None:
-            ptr, _, _ = svec_info_from_handle(handle)
-        SmallVecAPI.__init__(self, ptr, shape, dtype)
+            ptr, data_ptr, _, _ = svec_info_from_handle(handle)
+        SmallVecAPI.__init__(self, ptr, shape, dtype, data_ptr)
         ZenoObject.__init__(self, handle)
 
     @staticmethod
     def from_handle(handle):
-        ptr, shape, dtype = svec_info_from_handle(handle)
-        return SmallVecObject(shape, dtype, handle, ptr)
+        ptr, data_ptr, shape, dtype = svec_info_from_handle(handle)
+        return SmallVecObject(shape, dtype, handle, ptr, data_ptr)
 
     @staticmethod
     def from_numpy(arr: np.ndarray):

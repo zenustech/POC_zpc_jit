@@ -14,7 +14,7 @@ def init_zeno_lib(lib_path):
     zeno_lib.register(c_uint32, 'Zeno_DestroyObject', c_uint64)
     # APIs for creating svec
     zeno_lib.register(c_uint32, 'ZS_GetObjectZsVecData', c_uint64, POINTER(c_void_p), POINTER(c_size_t), POINTER(c_size_t), 
-                      POINTER(c_size_t), POINTER(c_int))
+                      POINTER(c_size_t), POINTER(c_int), POINTER(c_void_p))
     for type_str in ['float', 'double', 'int']:
         zeno_lib.register(c_uint32, f'ZS_CreateObjectZsSmallVec_{type_str}_scalar', POINTER(c_uint64))
         for dim_i in range(1, 5):
