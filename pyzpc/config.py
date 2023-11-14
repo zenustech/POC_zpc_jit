@@ -14,7 +14,8 @@ lib_suffix = 'dll' if os.name == 'nt' else 'so'
 lib_prefix = '' if os.name == 'nt' else 'lib'
 jit_cu_lib_path = os.path.join(lib_path, f'{lib_prefix}zpc_jit_nvrtc.{lib_suffix}')
 jit_llvm_lib_path = os.path.join(lib_path, f'{lib_prefix}zpc_jit_clang.{lib_suffix}')
-clang_path = f'/usr/local/lib/libclang.{lib_suffix}'
+# clang_path = f'/usr/local/lib/libclang.{lib_suffix}'
+clang_path = f'libclang.{lib_suffix}'
 
 zpc_lib_path = os.path.join(lib_path, f'{lib_prefix}zpc_py_interop.{lib_suffix}')
 zpc_include_path = os.path.join(base_path, 'zpc_jit', 'zpc', 'include')
