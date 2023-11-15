@@ -2,6 +2,7 @@ import inspect
 import ast
 from .context import registered_functions
 from .containers import TileVectorViewType, DataType, ViewType
+from .config import has_omp_lib
 
 ast_to_op_char = {
     ast.Lt: "<",
@@ -623,7 +624,8 @@ class KernelTranslator(FunctionTranslator):
         else:
             func_decl = f"void {self.name} ({','.join(view_ptr_arg_decls + offset_var_decls + ['zs::size_t tid = 0'])})"
             self.llvm_header = func_decl + '\n'
+            omp_preproc_str = '\n#pragma omp parallel for' if has_omp_lib else ''
             self.llvm_launch_src = f"void {self.llvm_launch_symbol_name} ({','.join(view_ptr_arg_decls + offset_var_decls + ['zs::size_t __zs_gen_num_threads = 0'])})" + \
-                '{\n#pragma omp parallel for\n\tfor (zs::size_t tid = 0; tid < __zs_gen_num_threads; tid++)' + \
+                '{' + omp_preproc_str + '\n\tfor (zs::size_t tid = 0; tid < __zs_gen_num_threads; tid++)' + \
                 self.name + '(' + ','.join(self.args +
                                            offset_var_names + ['tid']) + ');\n}\n'
