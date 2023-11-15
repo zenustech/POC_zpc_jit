@@ -489,10 +489,10 @@ def svec_info_from_handle(handle):
 
 
 class SmallVecObject(SmallVecAPI, ZenoObject):
-    def __init__(self, shape=(1, ), dtype: DataType = fl, handle=None, ptr=None) -> None:
+    def __init__(self, shape=(1, ), dtype: DataType = fl, handle=None, ptr=None, data_ptr=None) -> None:
         if handle is None:
             handle = create_svec_obj(shape, dtype)
-        if ptr is None:
+        if ptr is None or data_ptr is None:
             ptr, data_ptr, _, _ = svec_info_from_handle(handle)
         SmallVecAPI.__init__(self, ptr, shape, dtype, data_ptr)
         ZenoObject.__init__(self, handle)
