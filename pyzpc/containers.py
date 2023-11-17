@@ -36,6 +36,19 @@ integer = DataType('int', c_int)
 fl = DataType('float', c_float)
 dbl = double = DataType('double', c_double)
 string = DataType('zs::SmallString', c_char_p)
+vec2i = DataType('vec2i', in_kernel=True)
+vec3i = DataType('vec3i', in_kernel=True)
+vec4i = DataType('vec4i', in_kernel=True)
+vec2f = DataType('vec2f', in_kernel=True)
+vec3f = DataType('vec3f', in_kernel=True)
+vec4f = DataType('vec4f', in_kernel=True)
+mat2i = DataType('mat2i', in_kernel=True)
+mat3i = DataType('mat3i', in_kernel=True)
+mat4i = DataType('mat4i', in_kernel=True)
+mat2f = DataType('mat2f', in_kernel=True)
+mat3f = DataType('mat3f', in_kernel=True)
+mat4f = DataType('mat4f', in_kernel=True)
+
 
 ind2zstype = [integer, fl, dbl]
 zstype2nptype = {
@@ -474,7 +487,7 @@ def svec_info_from_handle(handle):
         ctypes.byref(_dims),
         ctypes.byref(_dim_x),
         ctypes.byref(_dim_y),
-        ctypes.byref(_type_ind), 
+        ctypes.byref(_type_ind),
         ctypes.byref(_data_ptr))
     shape = ()
     if _dims.value == 0:
