@@ -1,6 +1,6 @@
 import numpy as np
 from pyzpc import svec_t, svec
-from pyzpc import vec2f
+from pyzpc import mat2f
 import pyzpc as zs
 import sys
 sys.path.append('.')
@@ -11,8 +11,8 @@ tvv_t = tv_t.view_t(named=False)
 tvnv_t = tv_t.view_t(named=True)
 vec_t = zs.v_t(zs.int)
 vv_t = vec_t.view_t()
-vec2f_arr_t = zs.v_t(zs.vec2f)
-vec2f_arrv_t = vec2f_arr_t.view_t()
+mat2f_arr_t = zs.v_t(zs.mat2f)
+mat2f_arrv_t = mat2f_arr_t.view_t()
 fsvec2_t = svec_t((2, 2), zs.fl)
 
 
@@ -51,16 +51,16 @@ def test_tv(tv: tvv_t, vec: vv_t):
 
 
 @zs.llvm_kernel
-def init_svec_arr(v: vec2f_arrv_t):
+def init_svec_arr(v: mat2f_arrv_t):
     idx = tid
-    v[idx] = vec2f.ones() * idx * 0.1
+    v[idx] = mat2f.ones() * idx * 0.1
 
 
-# @zs.llvm_kernel
-# def print_svec_arr(v: vec2f_arrv_t):
-#     idx = tid
-#     if idx % 64 == 0:
-#         print(v[idx][0, 0])
+@zs.llvm_kernel
+def print_svec_arr(v: mat2f_arrv_t):
+    idx = tid
+    if idx % 64 == 0:
+        print(v[idx][0, 0])
 
 
 if __name__ == '__main__':
@@ -85,6 +85,6 @@ if __name__ == '__main__':
     test_np_arr = svec0.to_numpy()
     print(test_np_arr)
 
-    vec2f_arr = zs.Vector('host', 256, zs.vec2f)
-    zs.launch_llvm(pol, init_svec_arr, 256, vec2f_arr)
-    # zs.launch_llvm(pol, print_svec_arr, 256, vec2f_arr)
+    mat2f_arr = mat2f_arr_t('host', 256)
+    zs.launch_llvm(pol, init_svec_arr, 256, mat2f_arr)
+    zs.launch_llvm(pol, print_svec_arr, 256, mat2f_arr)
