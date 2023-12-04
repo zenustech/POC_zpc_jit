@@ -10,7 +10,7 @@ This build has been tested on windows 10/11 and ubuntu 20/22 with **llvm 15**, *
 
 Currently *zpc jit* module supports these JIT backends: LLVM (with openmp support if its runtime available) and Nvidia nvrtc. **py_zfx** is the target branch that is assumed to build ZPC JIT pipeline.
 
-#### [**llvm 15**](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.7)
+#### [**llvm 15+**](https://github.com/llvm/llvm-project/releases/tag/llvmorg-15.0.7)
 
 Under linux system,
 
@@ -24,7 +24,7 @@ sudo cmake --build build --parallel 16 --target install
 Under windows system, it is preferred to acquire llvm through vcpkg.
 
 ```powershell
-.\vcpkg install llvm:x64-windows-release
+.\vcpkg install llvm:x64-windows
 ```
 
 If a manual installation is demanded, make sure all **ATL components** have already been installed with visual studio, which is required for building LLVM. Then open terminal "**x64 Native Tools Command Prompt for VS20xx**", run the following build script.
