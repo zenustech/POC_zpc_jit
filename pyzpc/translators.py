@@ -92,7 +92,7 @@ class FunctionTranslator:
         self.indices_has_tuple = False
         self.compile_mode = compile_mode
         self.body = []
-        self.translate_node(self.ast_root.body[0])
+        self.translate_node(self.ast_root.body[0], kernel_level=True)
         if compile_mode == 'cuda':
             self.cuda_body = self.body
             self.cuda_src = '\n'.join(self.body) + '\n'
@@ -100,7 +100,7 @@ class FunctionTranslator:
             self.llvm_body = self.body
             self.llvm_src = '\n'.join(self.body) + '\n'
 
-    def translate_node(self, node, stmt_level=False):
+    def translate_node(self, node, stmt_level=False, kernel_level=False):
         type2func = {
             ast.FunctionDef: self.parse_FunctionDef,
 
@@ -131,7 +131,9 @@ class FunctionTranslator:
         params = [node]
         if type(node) == ast.Call:
             params.append(not stmt_level)
-        if type(node) not in type2func:
+        elif type(node) == ast.FunctionDef:
+            params.append(kernel_level)
+        elif type(node) not in type2func:
             raise RuntimeError(f"ast node of type {type(node)} not supported")
         return type2func[type(node)](*params)
 
@@ -146,10 +148,10 @@ class FunctionTranslator:
         self.blocks.append(BlockStmt())
         self.indent()
 
-    def end_block(self):
+    def end_block(self, with_semicol: bool = False):
         self.dedent()
         self.blocks.pop()
-        self.add_line("}")
+        self.add_line("};" if with_semicol else '}')
 
     def parse_Pass(self, node: ast.Pass):
         # NOTE: ignore pass for now
@@ -291,11 +293,11 @@ class FunctionTranslator:
         if isinstance(func_node, ast.Name):
             func_val = self.parse_Name(func_node, False)
             is_type = isinstance(func_val, DataType) and func_val.in_kernel
-            func_name = func_val.name if is_type else func_val 
+            func_name = func_val.name if is_type else func_val
             is_method = is_type
         if isinstance(node.func, ast.Attribute):
             func_name = self.translate_node(node.func)
-            is_method = True 
+            is_method = True
         return self.add_call(
             func_name, [
                 self.translate_Call_Args(arg) for arg in node.args],
@@ -391,11 +393,11 @@ class FunctionTranslator:
                                 prop_tag)
                         if len(node.slice.elts) == 3:
                             dim_elt = node.slice.elts[1]
-                            assert(isinstance(dim_elt, ast.Constant))
+                            assert (isinstance(dim_elt, ast.Constant))
                             prop_dim = dim_elt.value
-                            assert(isinstance(prop_dim, int))
+                            assert (isinstance(prop_dim, int))
                             indices = [f'__zs_gen_tag_offset_{container_name}_{prop_tag} + {prop_dim}',
-                                        indices[2]]
+                                       indices[2]]
                         else:
                             indices[0] = f'__zs_gen_tag_offset_{container_name}_{prop_tag}'
 
@@ -501,7 +503,13 @@ class FunctionTranslator:
         else:
             return self.add_call(ast_to_func_name[op_ast], vars)
 
-    def parse_FunctionDef(self, node: ast.FunctionDef):
+    def parse_FunctionDef(self, node: ast.FunctionDef, kernel_level: bool = False):
+        if kernel_level:
+            self.parse_FunctionDef_kernel(node)
+        else:
+            self.parse_FunctionDef_lambda(node)
+
+    def parse_FunctionDef_kernel(self, node: ast.FunctionDef):
         self.tv_unnamed_list = []
         self.tv_unnamed_tags = {}
         self.add_line("{")
@@ -535,6 +543,17 @@ class FunctionTranslator:
                 [f'zs::size_t {offset_var_name}'
                  for offset_var_name in offset_var_names]) + ")"
             self.llvm_header = template_header + '\n' + func_decl + '\n'
+
+    def parse_FunctionDef_lambda(self, node: ast.FunctionDef):
+        func_name = node.name
+        func_args = node.args.args
+        func_args_sig = ', '.join(
+            f'auto {arg_inst.arg}' for arg_inst in func_args)
+        self.add_line(f'auto {func_name} = [&] ({func_args_sig})')
+        self.begin_block()
+        for n in node.body:
+            self.translate_node(n, stmt_level=True)
+        self.end_block(with_semicol=True)
 
     def parse_Name(self, node: ast.Name, to_str=True):
         if not self.has_var(node.id):
@@ -586,7 +605,7 @@ class KernelTranslator(FunctionTranslator):
         if compile_mode == 'llvm':
             self.llvm_src += self.llvm_launch_src
 
-    def parse_FunctionDef(self, node: ast.FunctionDef):
+    def parse_FunctionDef_kernel(self, node: ast.FunctionDef):
         self.tv_unnamed_list = []
         self.tv_unnamed_tags = {}
         self.add_line("{")
