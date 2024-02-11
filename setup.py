@@ -1,4 +1,5 @@
 import os
+import sys
 from glob import glob 
 import pathlib
 import subprocess
@@ -47,11 +48,16 @@ subprocess.run(
 )
 
 lib_prefix = '' if os.name == 'nt' else 'lib'
-lib_suffix = 'dll' if os.name == 'nt' else 'so'
+lib_suffix = 'so'
+if sys.platform == 'win32':
+    lib_suffix = 'dll'
+elif sys.platform == 'darwin':
+    lib_suffix = 'dylib'
 loc_lib_name = f'{lib_prefix}zpc_py_interop.{lib_suffix}'
 build_lib_dir = find_file_dir_recursive(loc_lib_name, build_dir)
 shared_lib_paths = glob(pjoin(build_dir, '**/*.so'), recursive=True) + \
-    glob(pjoin(build_dir, '**/*.dll'), recursive=True)
+    glob(pjoin(build_dir, '**/*.dll'), recursive=True) + \
+    glob(pjoin(build_dir, '**/*.dylib'), recursive=True)
 for path in shared_lib_paths:
     filename = os.path.basename(path)
     shutil.copy(
