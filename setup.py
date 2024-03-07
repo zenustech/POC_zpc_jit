@@ -73,7 +73,7 @@ setup(
     url=meta['__url__'],
     description=meta['__description__'],
     long_description=(
-        'More information could be found at https://github.com/littlemine/POC_pyzpc'),
+        'More information could be found at https://github.com/zenustech/POC_zpc_jit'),
     platforms=['any'],
     packages=find_packages(),
     package_data={
