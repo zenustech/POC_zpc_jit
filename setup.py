@@ -64,6 +64,8 @@ dynamic_lib_names = [
     "zspartio",
     "zswhereami",
 ]
+if os.name == "nt":
+    dynamic_lib_names.append("libclang.dll")
 
 lib_prefix = "" if os.name == "nt" else "lib"
 lib_suffix = "so"
