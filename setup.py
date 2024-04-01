@@ -64,9 +64,6 @@ dynamic_lib_names = [
     "zspartio",
     "zswhereami",
 ]
-if os.name == "nt":
-    dynamic_lib_names.append("libclang.dll")
-
 lib_prefix = "" if os.name == "nt" else "lib"
 lib_suffix = "so"
 if sys.platform == "win32":
@@ -76,7 +73,10 @@ elif sys.platform == "darwin":
 dynamic_lib_names = [
     f"{lib_prefix}{name}.{lib_suffix}" for name in dynamic_lib_names
 ]
+if os.name == "nt":
+    dynamic_lib_names.append("libclang.dll")
 
+os.makedirs(os.path.dirname(out_lib_dir), exist_ok=True)
 if not IS_ZENO_MODE:
     loc_lib_name = f"{lib_prefix}zpc_py_interop.{lib_suffix}"
     build_lib_dir = find_file_dir_recursive(loc_lib_name, build_dir)
