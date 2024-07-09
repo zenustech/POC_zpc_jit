@@ -1,4 +1,5 @@
 from .zpc import zpc_lib
+from .zpc import MemSrc
 import numpy as np
 from functools import reduce
 import ctypes
@@ -78,24 +79,6 @@ class ZenoObject:
 
     def __del__(self):
         zeno_lib.call('Zeno_DestroyObject', c_uint64(self.handle))
-
-
-class MemSrc:
-    um = zpc_lib.lib.mem_enum__um()
-    host = zpc_lib.lib.mem_enum__host()
-    device = zpc_lib.lib.mem_enum__device()
-    ind2str = ['host', 'device', 'um']
-
-    @staticmethod
-    def from_name(name):
-        if name not in ('um', 'device', 'host'):
-            raise RuntimeError(
-                f'memsrc should be one of um, device, host, got: {name}')
-        return getattr(MemSrc, name)
-
-    @staticmethod
-    def to_name(ind):
-        return MemSrc.ind2str[ind]
 
 
 class PropTags:
@@ -234,6 +217,8 @@ class TileVector(TileVectorAPI):
     def __init__(self, memsrc, tags, size, elem_type=fl, length=32,
                  dev_id=0, virtual=False) -> None:
         c_memsrc = MemSrc.from_name(memsrc)
+        # print(f'{memsrc} gets {type(c_memsrc)}')
+        print(f'{type(zpc_lib)}')
         allocator = zpc_lib.lib.allocator(c_memsrc, dev_id)
         if isinstance(tags, dict):
             c_tags = PropTags(tags)

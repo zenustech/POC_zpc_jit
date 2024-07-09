@@ -61,8 +61,6 @@ dynamic_lib_names = [
     "zpc_py_interop",
     "zpc",
     "zpctool",
-    "zspartio",
-    "zswhereami",
 ]
 lib_prefix = "" if os.name == "nt" else "lib"
 lib_suffix = "so"
