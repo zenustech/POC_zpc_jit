@@ -307,6 +307,9 @@ class VectorAPI(Container):
         return VecView(self.call_zpc('pyview__v', self.ptr), self.elem_type,
                        self.virtual)
 
+    def data(self):
+        return self.call_zpc('get_handle_container__v', self.ptr)
+
     def relocate(self, memsrc: str, proc_id):
         memsrc = MemSrc.from_name(memsrc)
         self.memsrc = memsrc
@@ -320,10 +323,16 @@ class VectorAPI(Container):
     def get_val(self):
         return self.call_zpc('get_val_container__v', self.ptr)
 
+    def get_val_i(self, i: int):
+        self.call_zpc('get_val_i_container__v', self.ptr, c_size_t(i))
+
     def set_val(self, new_val):
         return self.call_zpc(
             'set_val_container__v', self.ptr, self.elem_type.c_type(new_val))
 
+    def set_val_i(self, i: int, new_val):
+        return self.call_zpc(
+            'set_val_i_container__v', self.ptr, c_size_t(i), self.elem_type.c_type(new_val))
 
 class Vector(VectorAPI):
     def __init__(

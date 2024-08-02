@@ -53,8 +53,12 @@ def init_zpc_lib(path: str):
             zpc_lib.register(None, f'relocate_container__v_{elem_type}{vir_suf}', c_void_p, c_int, c_int8)
             zpc_lib.register(None, f'resize_container__v_{elem_type}{vir_suf}', c_void_p, c_size_t)
 
-        zpc_lib.register(str2ctype[elem_type], f'get_val_container__v_{elem_type}', c_void_p)
-        zpc_lib.register(None, f'set_val_container__v_{elem_type}', c_void_p, str2ctype[elem_type])
+            zpc_lib.register(str2ctype[elem_type], f'get_val_container__v_{elem_type}{vir_suf}', c_void_p)
+            zpc_lib.register(None, f'set_val_container__v_{elem_type}{vir_suf}', c_void_p, str2ctype[elem_type])
+            zpc_lib.register(str2ctype[elem_type], f'get_val_i_container__v_{elem_type}{vir_suf}', c_void_p, c_size_t)
+            zpc_lib.register(None, f'set_val_i_container__v_{elem_type}{vir_suf}', c_void_p, c_size_t, str2ctype[elem_type])
+
+            zpc_lib.register(c_void_p, f'get_handle_container__v_{elem_type}{vir_suf}', c_void_p)
 
 
     for mem_src in ('host', 'device', 'um'):
