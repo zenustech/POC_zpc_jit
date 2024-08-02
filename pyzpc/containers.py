@@ -324,7 +324,7 @@ class VectorAPI(Container):
         return self.call_zpc('get_val_container__v', self.ptr)
 
     def get_val_i(self, i: int):
-        self.call_zpc('get_val_i_container__v', self.ptr, c_size_t(i))
+        return self.call_zpc('get_val_i_container__v', self.ptr, c_size_t(i))
 
     def set_val(self, new_val):
         return self.call_zpc(
