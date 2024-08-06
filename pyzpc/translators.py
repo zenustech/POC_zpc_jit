@@ -11,10 +11,8 @@ ast_to_op_char = {
     ast.GtE: ">=",
     ast.Eq: "==",
     ast.NotEq: "!=",
-
     ast.And: "&&",
     ast.Or: "||",
-
     ast.Add: "+",
     ast.Sub: "-",
     ast.Mult: "*",
@@ -25,26 +23,17 @@ ast_to_op_char = {
     ast.BitOr: "|",
     ast.BitXor: "^",
     ast.BitAnd: "&",
-    ast.MatMult: "*",   # TODO: may change the usage of '@' in the future
-
+    ast.MatMult: "*",  # TODO: may change the usage of '@' in the future
     ast.USub: "-",
     ast.Not: "!",
-    ast.Mod: "%"
+    ast.Mod: "%",
 }
 
 
-ast_to_func_name = {
-    ast.Pow: 'pow'
-}
+ast_to_func_name = {ast.Pow: "pow"}
 
 
-type_strs = [
-    'float',
-    'double',
-    'int',
-    'char',
-    'string'
-]
+type_strs = ["float", "double", "int", "char", "string"]
 
 
 class BlockStmt:
@@ -53,8 +42,9 @@ class BlockStmt:
 
 
 class ArgsInfo:
-    def __init__(self, names, annotations, inds, tv_unnamed_list,
-                 tv_unnamed_tags) -> None:
+    def __init__(
+        self, names, annotations, inds, tv_unnamed_list, tv_unnamed_tags
+    ) -> None:
         self.names = names
         self.annotations = annotations
         self.inds = inds
@@ -76,7 +66,7 @@ class FunctionTranslator:
         self.header_stmt = ""
         self.tail_stmt = ""
 
-    def translate(self, compile_mode: str = 'cuda'):
+    def translate(self, compile_mode: str = "cuda"):
         self.blocks = [BlockStmt()]
         for arg in self.args:
             self.blocks[-1].vars.append(arg)
@@ -93,27 +83,24 @@ class FunctionTranslator:
         self.compile_mode = compile_mode
         self.body = []
         self.translate_node(self.ast_root.body[0], kernel_level=True)
-        if compile_mode == 'cuda':
+        if compile_mode == "cuda":
             self.cuda_body = self.body
-            self.cuda_src = '\n'.join(self.body) + '\n'
+            self.cuda_src = "\n".join(self.body) + "\n"
         else:
             self.llvm_body = self.body
-            self.llvm_src = '\n'.join(self.body) + '\n'
+            self.llvm_src = "\n".join(self.body) + "\n"
 
     def translate_node(self, node, stmt_level=False, kernel_level=False):
         type2func = {
             ast.FunctionDef: self.parse_FunctionDef,
-
             ast.Name: self.parse_Name,
             ast.Attribute: self.parse_Attribute,
             ast.Constant: self.parse_Constant,
             ast.Tuple: self.parse_Tuple,
-
             ast.If: self.parse_If,
             ast.While: self.parse_While,
             ast.For: self.parse_For,
             ast.Break: self.parse_Break,
-
             ast.Compare: self.parse_Compare,
             ast.BoolOp: self.parse_BoolOp,
             ast.BinOp: self.parse_BinOp,
@@ -124,8 +111,7 @@ class FunctionTranslator:
             ast.Assign: self.parse_Assign,
             ast.Return: self.parse_Return,
             ast.AugAssign: self.parse_AugAssign,
-
-            ast.Pass: self.parse_Pass
+            ast.Pass: self.parse_Pass,
         }
 
         params = [node]
@@ -151,7 +137,7 @@ class FunctionTranslator:
     def end_block(self, with_semicol: bool = False):
         self.dedent()
         self.blocks.pop()
-        self.add_line("};" if with_semicol else '}')
+        self.add_line("};" if with_semicol else "}")
 
     def parse_Pass(self, node: ast.Pass):
         # NOTE: ignore pass for now
@@ -211,7 +197,7 @@ class FunctionTranslator:
             vars = [target_name]
         elif type(target_node) == ast.Tuple:
             for arg in target_node.elts:
-                assert (type(arg) == ast.Name)
+                assert type(arg) == ast.Name
                 vars.append(arg.id)
             target_name = "[" + ",".join(vars) + "]"
 
@@ -238,8 +224,11 @@ class FunctionTranslator:
         return var
 
     def push_while_label(self):
-        start_label, end_label, else_label = f"while_start_{self.label_ind}", \
-            f"while_end_{self.label_ind}", f"while_else_{self.label_ind}"
+        start_label, end_label, else_label = (
+            f"while_start_{self.label_ind}",
+            f"while_end_{self.label_ind}",
+            f"while_else_{self.label_ind}",
+        )
         self.while_start_labels.append(start_label)
         self.while_end_labels.append(end_label)
         self.while_else_labels.append(else_label)
@@ -252,7 +241,7 @@ class FunctionTranslator:
         self.while_else_labels.pop()
 
     def has_var(self, name):
-        if name == 'tid' and self.compile_mode == 'llvm':
+        if name == "tid" and self.compile_mode == "llvm":
             return True
         for block in self.blocks[::-1]:
             if name in block.vars:
@@ -299,21 +288,24 @@ class FunctionTranslator:
             func_name = self.translate_node(node.func)
             is_method = True
         return self.add_call(
-            func_name, [
-                self.translate_Call_Args(arg) for arg in node.args],
-            use_ret_val, is_method=is_method)
+            func_name,
+            [self.translate_Call_Args(arg) for arg in node.args],
+            use_ret_val,
+            is_method=is_method,
+        )
 
     def translate_Call_Args(self, node):
         if isinstance(node, ast.Tuple) or isinstance(node, ast.List):
             is_value_seq = True
             for elt in node.elts:
-                if not (
-                        isinstance(elt, ast.Constant) and
-                        isinstance(elt.value, int)):
+                if not (isinstance(elt, ast.Constant) and isinstance(elt.value, int)):
                     is_value_seq = False
                     break
             if is_value_seq:
-                return f'value_seq<{",".join(self.parse_Constant(elt) for elt in node.elts)}>' + '{}'
+                return (
+                    f'value_seq<{",".join(self.parse_Constant(elt) for elt in node.elts)}>'
+                    + "{}"
+                )
 
             is_type_seq = True
             for elt in node.elts:
@@ -324,11 +316,14 @@ class FunctionTranslator:
                     is_type_seq = False
                     break
             if is_type_seq:
-                return f'zs::type_seq<{",".join(self.parse_Name(elt) for elt in node.elts)}>' + '{}'
+                return (
+                    f'zs::type_seq<{",".join(self.parse_Name(elt) for elt in node.elts)}>'
+                    + "{}"
+                )
 
             def wrap_if_is_type(name):
                 if name in type_strs:
-                    return f'zs::wrapt<{name}>' + '{}'
+                    return f"zs::wrapt<{name}>" + "{}"
                 return name
 
             # make_tuple
@@ -337,7 +332,7 @@ class FunctionTranslator:
         elif isinstance(node, ast.Name):
             if node.id in type_strs:
                 # handle float, double, char, int
-                return f'wrapt<{node.id}>' + '{}'
+                return f"wrapt<{node.id}>" + "{}"
             else:
                 return self.parse_Name(node)
         else:
@@ -347,7 +342,7 @@ class FunctionTranslator:
         func = registered_functions.get(func_name)
         if func is None:
             return False
-        if self.compile_mode == 'cuda':
+        if self.compile_mode == "cuda":
             return func.use_cuda
         else:
             return func.use_llvm
@@ -365,41 +360,56 @@ class FunctionTranslator:
         val = self.translate_node(node.value)
         self.parsing_indices = True
         self.indices_has_tuple = False
-        if isinstance(node.slice, ast.Name):
-            var = self.add_var()
-            self.add_line(f"auto&& {var} = {val}[{node.slice.id}]; ")
-            return var
-        if isinstance(node.slice, ast.Constant):
-            slice_var = self.parse_Constant(node.slice)
-            var = self.add_var()
-            self.add_line(f'auto&& {var} = {val}[{slice_var}];')
-            return var
-        indices = [self.translate_node(arg) for arg in node.slice.elts]
+        # if isinstance(node.slice, ast.Name):
+        #     var = self.add_var()
+        #     self.add_line(f"auto&& {var} = {val}[{node.slice.id}]; ")
+        #     return var
+        # if isinstance(node.slice, ast.Constant):
+        #     slice_var = self.parse_Constant(node.slice)
+        #     var = self.add_var()
+        #     self.add_line(f'auto&& {var} = {val}[{slice_var}];')
+        #     return var
+        # indices = [self.translate_node(arg) for arg in node.slice.elts]
+
+        indices = None
 
         if isinstance(node.value, ast.Name):
             container_name = node.value.id
             if container_name in self.args_annotations:
                 if isinstance(
-                        self.args_annotations[container_name],
-                        TileVectorViewType):
+                    self.args_annotations[container_name], TileVectorViewType
+                ):
+                    assert isinstance(node.slice, ast.Tuple)
+                    indices = [self.translate_node(arg) for arg in node.slice.elts]
                     tag_elt = node.slice.elts[0]
-                    if isinstance(tag_elt, ast.Constant) and isinstance(tag_elt.value, str):
+                    if isinstance(tag_elt, ast.Constant) and isinstance(
+                        tag_elt.value, str
+                    ):
                         prop_tag = tag_elt.value
                         if container_name not in self.tv_unnamed_list:
                             self.tv_unnamed_list.append(container_name)
                             self.tv_unnamed_tags[container_name] = []
                         if prop_tag not in self.tv_unnamed_tags[container_name]:
-                            self.tv_unnamed_tags[container_name].append(
-                                prop_tag)
+                            self.tv_unnamed_tags[container_name].append(prop_tag)
                         if len(node.slice.elts) == 3:
                             dim_elt = node.slice.elts[1]
-                            assert (isinstance(dim_elt, ast.Constant))
+                            assert isinstance(dim_elt, ast.Constant)
                             prop_dim = dim_elt.value
-                            assert (isinstance(prop_dim, int))
-                            indices = [f'__zs_gen_tag_offset_{container_name}_{prop_tag} + {prop_dim}',
-                                       indices[2]]
+                            assert isinstance(prop_dim, int)
+                            indices = [
+                                f"__zs_gen_tag_offset_{container_name}_{prop_tag} + {prop_dim}",
+                                indices[2],
+                            ]
                         else:
-                            indices[0] = f'__zs_gen_tag_offset_{container_name}_{prop_tag}'
+                            indices[0] = (
+                                f"__zs_gen_tag_offset_{container_name}_{prop_tag}"
+                            )
+        if indices is None:
+            if isinstance(node.slice, ast.Tuple):
+                indices = [self.translate_node(arg) for arg in node.slice.elts]
+            else:
+                slice_var = self.translate_node(node.slice)
+                indices = [slice_var]
 
         if self.indices_has_tuple:
             method_name = ".tuple" if lval else ".pack"
@@ -434,7 +444,7 @@ class FunctionTranslator:
         raise RuntimeError(f"undefined reference {var}")
 
     def parse_Assign(self, node: ast.Assign):
-        assert (len(node.targets) == 1)
+        assert len(node.targets) == 1
         target_node = node.targets[0]
         if type(target_node) == ast.Tuple:
             raise NotImplementedError()
@@ -467,20 +477,18 @@ class FunctionTranslator:
         target_str = self.translate_node(node.target)
         target_val = self.translate_node(node.target)
         var_val = self.translate_node(node.value)
-        var_res = self.add_op_call(type(node.op), [
-            target_val, var_val])
+        var_res = self.add_op_call(type(node.op), [target_val, var_val])
         self.add_line(f"{target_str} = {var_res}; ")
 
     def add_line(self, line):
-        self.body.append(f'{self.indent_str}{line}')
+        self.body.append(f"{self.indent_str}{line}")
 
     def add_call(self, func_name, vars, use_ret_val=True, is_method=False):
         if (not self.has_func(func_name)) and func_name:
-            func_name = func_name if is_method else f'zs::{func_name}'
+            func_name = func_name if is_method else f"zs::{func_name}"
         if use_ret_val:
             var = self.add_var()
-            self.add_line(
-                f"auto&& {var} = {func_name}({','.join(vars)}); ")
+            self.add_line(f"auto&& {var} = {func_name}({','.join(vars)}); ")
             return var
         else:
             self.add_line(f"{func_name}({','.join(vars)}); ")
@@ -491,15 +499,16 @@ class FunctionTranslator:
             op_char = ast_to_op_char[op_ast]
             if len(vars) == 1:
                 var = self.add_var()
-                self.add_line(f'auto&& {var} = {op_char}{vars[0]}; ')
+                self.add_line(f"auto&& {var} = {op_char}{vars[0]}; ")
                 return var
             elif len(vars) == 2:
                 var = self.add_var()
-                self.add_line(f'auto&& {var} = {vars[0]}{op_char}{vars[1]}; ')
+                self.add_line(f"auto&& {var} = {vars[0]}{op_char}{vars[1]}; ")
                 return var
             else:
                 raise RuntimeError(
-                    f'too many parameters for operator {op_char}: {vars}')
+                    f"too many parameters for operator {op_char}: {vars}"
+                )
         else:
             return self.add_call(ast_to_func_name[op_ast], vars)
 
@@ -519,37 +528,53 @@ class FunctionTranslator:
         self.indent_str = ""
         self.add_line("}")
 
-        if 'return' not in self.args_annotations:
-            ret_decl = 'auto'
+        if "return" not in self.args_annotations:
+            ret_decl = "auto"
         else:
-            ret_ann = self.args_annotations['return']
-            ret_decl = 'void' if ret_ann is None else ret_ann.name
-        template_header = "template<" + \
-            ",".join([f"class T_{i}" for i in range(len(self.args))]) + ">"
+            ret_ann = self.args_annotations["return"]
+            ret_decl = "void" if ret_ann is None else ret_ann.name
+        template_header = (
+            "template<"
+            + ",".join([f"class T_{i}" for i in range(len(self.args))])
+            + ">"
+        )
         offset_var_names = []
         for tv in self.tv_unnamed_list:
             offset_var_names += [
-                f'__zs_gen_tag_offset_{tv}_{attr}'
-                for attr in self.tv_unnamed_tags[tv]]
-        if self.compile_mode == 'cuda':
-            func_decl = f"__device__ __host__ {ret_decl} {self.name} (" + ",".join(
-                [f"T_{i}&& {arg}" for i, arg in enumerate(self.args)] +
-                [f'zs::size_t {offset_var_name}'
-                 for offset_var_name in offset_var_names]) + ")"
-            self.cuda_header = template_header + '\n' + func_decl + '\n'
+                f"__zs_gen_tag_offset_{tv}_{attr}" for attr in self.tv_unnamed_tags[tv]
+            ]
+        if self.compile_mode == "cuda":
+            func_decl = (
+                f"__device__ __host__ {ret_decl} {self.name} ("
+                + ",".join(
+                    [f"T_{i}&& {arg}" for i, arg in enumerate(self.args)]
+                    + [
+                        f"zs::size_t {offset_var_name}"
+                        for offset_var_name in offset_var_names
+                    ]
+                )
+                + ")"
+            )
+            self.cuda_header = template_header + "\n" + func_decl + "\n"
         else:
-            func_decl = f"{ret_decl} {self.name} (" + ",".join(
-                [f"T_{i}&& {arg}" for i, arg in enumerate(self.args)] +
-                [f'zs::size_t {offset_var_name}'
-                 for offset_var_name in offset_var_names]) + ")"
-            self.llvm_header = template_header + '\n' + func_decl + '\n'
+            func_decl = (
+                f"{ret_decl} {self.name} ("
+                + ",".join(
+                    [f"T_{i}&& {arg}" for i, arg in enumerate(self.args)]
+                    + [
+                        f"zs::size_t {offset_var_name}"
+                        for offset_var_name in offset_var_names
+                    ]
+                )
+                + ")"
+            )
+            self.llvm_header = template_header + "\n" + func_decl + "\n"
 
     def parse_FunctionDef_lambda(self, node: ast.FunctionDef):
         func_name = node.name
         func_args = node.args.args
-        func_args_sig = ', '.join(
-            f'auto {arg_inst.arg}' for arg_inst in func_args)
-        self.add_line(f'auto {func_name} = [&] ({func_args_sig})')
+        func_args_sig = ", ".join(f"auto {arg_inst.arg}" for arg_inst in func_args)
+        self.add_line(f"auto {func_name} = [&] ({func_args_sig})")
         self.begin_block()
         for n in node.body:
             self.translate_node(n, stmt_level=True)
@@ -571,7 +596,7 @@ class FunctionTranslator:
         if isinstance(node.value, ast.Name):
             val_name = self.parse_Name(node.value, False)
             if isinstance(val_name, DataType) and val_name.in_kernel:
-                return f'{val_name.name}::{node.attr}'
+                return f"{val_name.name}::{node.attr}"
             return f"{node.value.id}.{node.attr}"
         return self.translate_node(node.value) + f".{node.attr}"
 
@@ -579,7 +604,7 @@ class FunctionTranslator:
         if isinstance(node.value, str):
             return self.handle_quote(ast.unparse(node))
         else:
-            return f'{node.value}'
+            return f"{node.value}"
 
     def handle_quote(self, string):
         if string[0] == "'" and string[-1] == "'":
@@ -587,8 +612,13 @@ class FunctionTranslator:
 
     @property
     def args_info(self) -> ArgsInfo:
-        return ArgsInfo(self.args, self.args_annotations, self.arg_inds,
-                        self.tv_unnamed_list, self.tv_unnamed_tags)
+        return ArgsInfo(
+            self.args,
+            self.args_annotations,
+            self.arg_inds,
+            self.tv_unnamed_list,
+            self.tv_unnamed_tags,
+        )
 
 
 class KernelTranslator(FunctionTranslator):
@@ -596,13 +626,12 @@ class KernelTranslator(FunctionTranslator):
         super().__init__(func)
         for arg in self.args:
             if arg not in self.args_annotations:
-                raise RuntimeError(
-                    f'The type of argument {arg} should be annotated!')
+                raise RuntimeError(f"The type of argument {arg} should be annotated!")
         self.llvm_launch_symbol_name = llvm_launch_symbol_name
 
-    def translate(self, compile_mode: str = 'cuda'):
+    def translate(self, compile_mode: str = "cuda"):
         super().translate(compile_mode)
-        if compile_mode == 'llvm':
+        if compile_mode == "llvm":
             self.llvm_src += self.llvm_launch_src
 
     def parse_FunctionDef_kernel(self, node: ast.FunctionDef):
@@ -619,32 +648,39 @@ class KernelTranslator(FunctionTranslator):
         view_ptr_arg_decls = []
         for ind, arg in enumerate(self.args):
             arg_type = self.args_annotations[arg]
-            decl = f'{arg_type.name} {arg}'
-            view_ptr_arg_decl = f'{arg_type.name}& {arg}' \
-                if isinstance(arg_type, ViewType) else decl
+            decl = f"{arg_type.name} {arg}"
+            view_ptr_arg_decl = (
+                f"{arg_type.name}& {arg}" if isinstance(arg_type, ViewType) else decl
+            )
             default_ind = len(self.args) - ind - 1
             if default_ind < len(self.defaults):
-                decl += f' = {self.defaults[default_ind]}'
-                view_ptr_arg_decl += f' = {self.defaults[default_ind]}'
+                decl += f" = {self.defaults[default_ind]}"
+                view_ptr_arg_decl += f" = {self.defaults[default_ind]}"
             arg_decls.append(decl)
             view_ptr_arg_decls.append(view_ptr_arg_decl)
         offset_var_names = []
         for tv in self.tv_unnamed_list:
             offset_var_names += [
-                f'__zs_gen_tag_offset_{tv}_{attr}'
-                for attr in self.tv_unnamed_tags[tv]]
+                f"__zs_gen_tag_offset_{tv}_{attr}" for attr in self.tv_unnamed_tags[tv]
+            ]
         offset_var_decls = [
-            f'zs::size_t {offset_var_name}'
-            for offset_var_name in offset_var_names]
+            f"zs::size_t {offset_var_name}" for offset_var_name in offset_var_names
+        ]
 
-        if self.compile_mode == 'cuda':
+        if self.compile_mode == "cuda":
             func_decl = f"__global__ void {self.name} ({','.join(arg_decls + offset_var_decls)})"
-            self.cuda_header = func_decl + '\n'
+            self.cuda_header = func_decl + "\n"
         else:
             func_decl = f"void {self.name} ({','.join(view_ptr_arg_decls + offset_var_decls + ['zs::size_t tid = 0'])})"
-            self.llvm_header = func_decl + '\n'
-            omp_preproc_str = '\n#pragma omp parallel for' if has_omp_lib else ''
-            self.llvm_launch_src = f"void {self.llvm_launch_symbol_name} ({','.join(view_ptr_arg_decls + offset_var_decls + ['zs::size_t __zs_gen_num_threads = 0'])})" + \
-                '{' + omp_preproc_str + '\n\tfor (zs::size_t tid = 0; tid < __zs_gen_num_threads; tid++)' + \
-                self.name + '(' + ','.join(self.args +
-                                           offset_var_names + ['tid']) + ');\n}\n'
+            self.llvm_header = func_decl + "\n"
+            omp_preproc_str = "\n#pragma omp parallel for" if has_omp_lib else ""
+            self.llvm_launch_src = (
+                f"void {self.llvm_launch_symbol_name} ({','.join(view_ptr_arg_decls + offset_var_decls + ['zs::size_t __zs_gen_num_threads = 0'])})"
+                + "{"
+                + omp_preproc_str
+                + "\n\tfor (zs::size_t tid = 0; tid < __zs_gen_num_threads; tid++)"
+                + self.name
+                + "("
+                + ",".join(self.args + offset_var_names + ["tid"])
+                + ");\n}\n"
+            )
