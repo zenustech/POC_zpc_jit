@@ -330,6 +330,12 @@ class VectorAPI(Container):
         return self.call_zpc(
             'set_val_container__v', self.ptr, self.elem_type.c_type(new_val))
 
+    def copy_to(self, ptr):
+        return self.call_zpc('copy_to_container__v', self.ptr, ptr)
+
+    def copy_from(self, ptr):
+        return self.call_zpc('copy_from_container__v', self.ptr, ptr)
+
     def set_val_i(self, i: int, new_val):
         return self.call_zpc(
             'set_val_i_container__v', self.ptr, c_size_t(i), self.elem_type.c_type(new_val))
