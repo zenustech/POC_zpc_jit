@@ -7,8 +7,8 @@ import shutil
 from os.path import dirname, join as pjoin
 from setuptools import setup, find_packages
 
-ZENO_BIN_DIR = os.environ.get("ZENO_BIN_DIR")
-IS_ZENO_MODE = (ZENO_BIN_DIR is not None) and (len(ZENO_BIN_DIR) > 0)
+ZPC_BIN_DIR = os.environ.get("ZPC_BIN_DIR")
+ZPC_IS_PREBUILT = (ZPC_BIN_DIR is not None) and (len(ZPC_BIN_DIR) > 0)
 
 
 def find_file_dir_recursive(name, path):
@@ -25,7 +25,7 @@ base_dir = dirname(__file__)
 cmake_dir = os.path.join(base_dir, "pyzpc", "zpc_jit")
 out_lib_dir = pjoin(cmake_dir, "lib")
 
-if not IS_ZENO_MODE:
+if not ZPC_IS_PREBUILT:
     os.chdir(cmake_dir)
     build_dir = pjoin(base_dir, "cmake_build")
     out_lib_dir_path = pathlib.Path(out_lib_dir)
@@ -75,7 +75,7 @@ if os.name == "nt":
     dynamic_lib_names.append("libclang.dll")
 
 os.makedirs(os.path.dirname(out_lib_dir), exist_ok=True)
-if not IS_ZENO_MODE:
+if not ZPC_IS_PREBUILT:
     loc_lib_name = f"{lib_prefix}zpc_py_interop.{lib_suffix}"
     build_lib_dir = find_file_dir_recursive(loc_lib_name, build_dir)
     shared_lib_paths = (
@@ -87,9 +87,9 @@ if not IS_ZENO_MODE:
         filename = os.path.basename(path)
         shutil.copy(path, pjoin(out_lib_dir, filename))
 else:
-    for name in os.listdir(ZENO_BIN_DIR):
+    for name in os.listdir(ZPC_BIN_DIR):
         if name in dynamic_lib_names:
-            shutil.copy(pjoin(ZENO_BIN_DIR, name), pjoin(out_lib_dir, name))
+            shutil.copy(pjoin(ZPC_BIN_DIR, name), pjoin(out_lib_dir, name))
 
 # os.removedirs(build_dir)
 os.chdir(str(cwd))
