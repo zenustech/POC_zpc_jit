@@ -38,11 +38,11 @@ class CLib:
         if self.lib is None:
             print(f'Library {self.lib_path} is not found, \
                   please check if CUDA and LLVM are installed properly.')
-        if hasattr(self.lib, func_name)
+        if hasattr(self.lib, func_name):
             func = getattr(self.lib, func_name)
             func.restype = restype
             func.argtypes = argtypes
-        else
+        else:
             func = None
 
     def call(self, func_name, *args):
